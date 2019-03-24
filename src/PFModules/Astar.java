@@ -33,6 +33,7 @@ public class Astar implements PFAlg{
             }
             System.out.println();
         }
+        System.out.println();
     }
 
     private int manhattanDistance(int row, int col){
@@ -44,7 +45,17 @@ public class Astar implements PFAlg{
     }
 
     private int translate(int row, int col){
-        return row * dimension + col;
+        return row * dimension  + col;
+    }
+
+    static Integer[][] clone(Integer[][] a) {
+        Integer[][] b = new Integer[a.length][];
+        for (int i = 0; i < a.length; i++) {
+            b[i]= new Integer[a[i].length];
+            for (int j = 0; j < a[i].length; j++)
+                b[i][j] = a[i][j];
+        }
+        return b;
     }
 
     @Override
@@ -55,13 +66,14 @@ public class Astar implements PFAlg{
         if ( isFinal(curBoard) ){
             return curBoard;
         }
+
         int backLinkPos = translate(row, col);
         Integer[][] curState = curBoard.get2DArray();
         if ((row -1) >= 0 && curState[row - 1][col] != -1){
             int trueCostSoFar = curBoard.getCostSoFar() + 1;
             int fx = trueCostSoFar + manhattanDistance(row - 1, col);
             if (curState[row - 1][col] == 0 ^ fx < curState[row - 1][col]) {
-                Integer[][] newState = curState.clone();
+                Integer[][] newState = clone(curState);
                 newState[row - 1][col] = fx;
                 pq.add(new Board(newState, row - 1, col, trueCostSoFar, fx));
                 path[translate(row - 1, col)] = backLinkPos;
@@ -71,7 +83,7 @@ public class Astar implements PFAlg{
             int trueCostSoFar = curBoard.getCostSoFar() + 1;
             int fx = trueCostSoFar + manhattanDistance(row, col - 1);
             if (curState[row][col - 1] == 0 ^ fx < curState[row][col - 1]) {
-                Integer[][] newState = curState.clone();
+                Integer[][] newState = clone(curState);
                 newState[row][col - 1] = fx;
                 pq.add(new Board(newState, row, col - 1, trueCostSoFar, fx));
                 path[translate(row, col - 1)] = backLinkPos;
@@ -81,7 +93,7 @@ public class Astar implements PFAlg{
             int trueCostSoFar = curBoard.getCostSoFar() + 1;
             int fx = trueCostSoFar + manhattanDistance(row + 1, col);
             if (curState[row + 1][col] == 0 ^ fx < curState[row + 1][col]) {
-                Integer[][] newState = curState.clone();
+                Integer[][] newState = clone(curState);
                 newState[row + 1][col] = fx;
                 pq.add(new Board(newState, row + 1, col, trueCostSoFar, fx));
                 path[translate(row + 1, col)] = backLinkPos;
@@ -91,7 +103,7 @@ public class Astar implements PFAlg{
             int trueCostSoFar = curBoard.getCostSoFar() + 1;
             int fx = trueCostSoFar + manhattanDistance(row, col + 1);
             if (curState[row][col + 1] == 0 ^ fx < curState[row][col + 1]) {
-                Integer[][] newState = curState.clone();
+                Integer[][] newState = clone(curState);
                 newState[row][col + 1] = fx;
                 pq.add(new Board(newState, row, col + 1, trueCostSoFar, fx));
                 path[translate(row, col + 1)] = backLinkPos;
@@ -105,7 +117,7 @@ public class Astar implements PFAlg{
         boolean pathFound = false;
         while (!pq.isEmpty()){
             Board top = process();
-//            print(top);
+            print(top);
             if (isFinal(top)){
                 pathFound = true;
                 break;
@@ -116,22 +128,28 @@ public class Astar implements PFAlg{
         }
         else{
             int vertex = translate(endRow, endCol);
-//            while (path[vertex] != -1){
-//                System.out.print(vertex + "<-");
-//                vertex = path[vertex];
-//            }
-            for(int i = 0; i < dimension*dimension; i++){
-                System.out.print(path[i] + " ");
+            while (path[vertex] != -1){
+                System.out.print(vertex + "<-");
+                vertex = path[vertex];
             }
+//            for(int i = 0; i < dimension*dimension; i++){
+//                System.out.print(path[i] + " ");
+//            }
+            System.out.print(vertex);
         }
     }
 
     public static void main(String[] args) {
         int startRow = 0;
-        int startCol = 0;
-        Integer[][] startState = {{0,-1,0},{0,-1,0},{0,0,0}};
-        Board initBoard = new Board(startState, startRow, startCol, 0, 0);
-        Astar PFalg = new Astar(initBoard, 2, 2);
+        int startCol = 1;
+        int endRow = 3;
+        int endCol = 3;
+        int manhattan = Math.abs(startRow - endRow) + Math.abs(startCol - endCol);
+        Integer[][] startState = {{0,0,0,0},{0,-1,-1,0},{0,0,0,0},{0,0,0,0}};
+        startState[startRow][startCol] = manhattan;
+        Board initBoard = new Board(startState, startRow, startCol,
+                0, manhattan);
+        Astar PFalg = new Astar(initBoard, endRow, endCol);
     }
 
 }
