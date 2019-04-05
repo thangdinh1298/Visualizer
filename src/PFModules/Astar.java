@@ -3,21 +3,24 @@ package PFModules;
 import Utils.Board;
 
 import java.util.PriorityQueue;
-import java.util.Queue;
 
 public class Astar implements PFAlg{
     private PriorityQueue<Board> pq = new PriorityQueue<>();
     int endRow;
     int endCol;
-    Board initState;
+    Integer[][] persistenceRefernce;
     Integer[] path;
     int dimension;
+    int startRow;
+    int startCol;
 
-    public Astar(Board initState, int endRow, int endCol) {
-        this.initState = initState;
+    public Astar(Integer[][] persistenceRefernce, int startRow, int startCol, int endRow, int endCol) {
+        this.persistenceRefernce = persistenceRefernce;
+        this.startRow = startRow;
+        this.startCol = startCol;
         this.endRow = endRow;
         this.endCol = endCol;
-        this.dimension = initState.get2DArray()[0].length;
+        this.dimension = persistenceRefernce[0].length;
         path = new Integer [dimension*dimension];
         for (int i = 0; i < dimension * dimension; i++){
             path[i] = -1;
@@ -25,8 +28,7 @@ public class Astar implements PFAlg{
         findPath();
     }
 
-    private void print(Board board){
-        Integer[][] state = board.get2DArray();
+    private void print(Integer[][] state){
         for (Integer row = 0; row < state.length; row++){
             for ( Integer col = 0; col < state[0].length; col++){
                 System.out.print(state[row][col] + " ");
@@ -44,8 +46,15 @@ public class Astar implements PFAlg{
         return board.getCurRow() == this.endRow && board.getCurCol() == this.endCol;
     }
 
-    private int translate(int row, int col){
+    private int rowColToInt(int row, int col){
         return row * dimension  + col;
+    }
+    // row = arr[0], col = arr[1]
+    private int[] intToRowCol(int v){
+        int[] retVal = new int[2];
+        retVal[1] = v % dimension;
+        retVal[0] = v / dimension;
+        return retVal;
     }
 
     static Integer[][] clone(Integer[][] a) {
@@ -67,58 +76,53 @@ public class Astar implements PFAlg{
             return curBoard;
         }
 
-        int backLinkPos = translate(row, col);
-        Integer[][] curState = curBoard.get2DArray();
-        if ((row -1) >= 0 && curState[row - 1][col] != -1){
+        int backLinkPos = rowColToInt(row, col);
+        if ((row -1) >= 0 && persistenceRefernce[row - 1][col] != -1){
             int trueCostSoFar = curBoard.getCostSoFar() + 1;
             int fx = trueCostSoFar + manhattanDistance(row - 1, col);
-            if (curState[row - 1][col] == 0 ^ fx < curState[row - 1][col]) {
-                Integer[][] newState = clone(curState);
-                newState[row - 1][col] = fx;
-                pq.add(new Board(newState, row - 1, col, trueCostSoFar, fx));
-                path[translate(row - 1, col)] = backLinkPos;
+            if (persistenceRefernce[row - 1][col] == 0 ^ fx < persistenceRefernce[row - 1][col]) {
+                persistenceRefernce[row - 1][col] = fx;
+                pq.add(new Board(row - 1,  col, trueCostSoFar, fx));
+                path[rowColToInt(row - 1, col)] = backLinkPos;
             }
         }
-        if ((col -1) >= 0 && curState[row][col - 1] != -1){
+        if ((col -1) >= 0 && persistenceRefernce[row][col - 1] != -1){
             int trueCostSoFar = curBoard.getCostSoFar() + 1;
             int fx = trueCostSoFar + manhattanDistance(row, col - 1);
-            if (curState[row][col - 1] == 0 ^ fx < curState[row][col - 1]) {
-                Integer[][] newState = clone(curState);
-                newState[row][col - 1] = fx;
-                pq.add(new Board(newState, row, col - 1, trueCostSoFar, fx));
-                path[translate(row, col - 1)] = backLinkPos;
+            if (persistenceRefernce[row][col - 1] == 0 ^ fx < persistenceRefernce[row][col - 1]) {
+                persistenceRefernce[row][col - 1] = fx;
+                pq.add(new Board(row, col - 1, trueCostSoFar, fx));
+                path[rowColToInt(row, col - 1)] = backLinkPos;
             }
         }
-        if ((row +1) < curBoard.getNumRow() && curState[row + 1][col] != -1){
+        if ((row +1) < dimension && persistenceRefernce[row + 1][col] != -1){
             int trueCostSoFar = curBoard.getCostSoFar() + 1;
             int fx = trueCostSoFar + manhattanDistance(row + 1, col);
-            if (curState[row + 1][col] == 0 ^ fx < curState[row + 1][col]) {
-                Integer[][] newState = clone(curState);
-                newState[row + 1][col] = fx;
-                pq.add(new Board(newState, row + 1, col, trueCostSoFar, fx));
-                path[translate(row + 1, col)] = backLinkPos;
+            if (persistenceRefernce[row + 1][col] == 0 ^ fx < persistenceRefernce[row + 1][col]) {
+                persistenceRefernce[row + 1][col] = fx;
+                pq.add(new Board(row + 1, col, trueCostSoFar, fx));
+                path[rowColToInt(row + 1, col)] = backLinkPos;
             }
         }
-        if ((col +1) < curBoard.getNumCol() && curState[row][col + 1] != -1){
+        if ((col +1) < dimension && persistenceRefernce[row][col + 1] != -1){
             int trueCostSoFar = curBoard.getCostSoFar() + 1;
             int fx = trueCostSoFar + manhattanDistance(row, col + 1);
-            if (curState[row][col + 1] == 0 ^ fx < curState[row][col + 1]) {
-                Integer[][] newState = clone(curState);
-                newState[row][col + 1] = fx;
-                pq.add(new Board(newState, row, col + 1, trueCostSoFar, fx));
-                path[translate(row, col + 1)] = backLinkPos;
+            if (persistenceRefernce[row][col + 1] == 0 ^ fx < persistenceRefernce[row][col + 1]) {
+                persistenceRefernce[row][col + 1] = fx;
+                pq.add(new Board(row, col + 1, trueCostSoFar, fx));
+                path[rowColToInt(row, col + 1)] = backLinkPos;
             }
         }
         return curBoard;
     }
 
     private void findPath(){
-        pq.add(initState);
+        pq.add(new Board(this.startRow, this.startCol, 0, manhattanDistance(this.startRow, this.startCol)));
         boolean pathFound = false;
         while (!pq.isEmpty()){
-            Board top = process();
-            print(top);
-            if (isFinal(top)){
+            Board b = process();
+            print(persistenceRefernce);
+            if (isFinal(b)){
                 pathFound = true;
                 break;
             }
@@ -127,7 +131,8 @@ public class Astar implements PFAlg{
             System.out.println("No path exists");
         }
         else{
-            int vertex = translate(endRow, endCol);
+//            print(persistenceRefernce);
+            int vertex = rowColToInt(endRow, endCol);
             while (path[vertex] != -1){
                 System.out.print(vertex + "<-");
                 vertex = path[vertex];
@@ -141,15 +146,27 @@ public class Astar implements PFAlg{
 
     public static void main(String[] args) {
         int startRow = 0;
-        int startCol = 1;
-        int endRow = 3;
-        int endCol = 3;
+        int startCol = 0;
+        int endRow = 1;
+        int endCol = 9;
         int manhattan = Math.abs(startRow - endRow) + Math.abs(startCol - endCol);
-        Integer[][] startState = {{0,0,0,0},{0,-1,-1,0},{0,0,0,0},{0,0,0,0}};
+        Integer[][] startState = {{0,  0,  0,  0,  0,  0,  0,  0,  0,  -1,  0,  0,  0,  0,  0},
+                {0,  0,  0,  0,  0,  0,  0,  0,  -1,  0,  0,  0,  0,  0,  0},
+                {0,  0,  0,  0,  0,  0,  0,  0,  0,  -1,  0,  0,  0,  0,  0},
+                {0,  0,  0,  0,  0,  0,  0,  0,  -1,  0,  0,  0,  0,  0,  0},
+                {0,  0,  0,  0,  0,  0,  0,  0,  0,  -1,  0,  0,  0,  0,  0},
+                {0,  0,  0,  0,  0,  0,  0,  0,  -1,  0,  0,  0,  0,  0,  0},
+                {0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0},
+                {0,  0,  0,  0,  0,  0,  0,  0,  -1,  0,  0,  0,  0,  0,  0},
+                {0,  0,  0,  0,  0,  0,  0,  0,  0,  -1,  0,  0,  0,  0,  0},
+                {0,  0,  0,  0,  0,  0,  0,  0,  -1,  0,  0,  0,  0,  0,  0},
+                {0,  0,  0,  0,  0,  0,  0,  0,  0,  -1,  0,  0,  0,  0,  0},
+                {0,  0,  0,  0,  0,  0,  0,  0,  -1,  0,  0,  0,  0,  0,  0},
+                {0,  0,  0,  0,  0,  0,  0,  0,  -1,  -1,  0,  0,  0,  0,  0},
+                {0,  0,  0,  0,  0,  0,  0,  0,  0,  -1,  0,  0,  0,  0,  0},
+                {0,  0,  0,  0,  0,  0,  0,  0,  0,  -1,  0,  0,  0,  0,  0}  };
         startState[startRow][startCol] = manhattan;
-        Board initBoard = new Board(startState, startRow, startCol,
-                0, manhattan);
-        Astar PFalg = new Astar(initBoard, endRow, endCol);
+        Astar PFalg = new Astar(startState, startRow, startCol , endRow, endCol);
     }
 
 }
